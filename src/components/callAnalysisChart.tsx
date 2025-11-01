@@ -9,6 +9,7 @@ import {
   CartesianGrid,
   LabelList,
 } from "recharts";
+import { supabase } from "../lib/supabaseClient";
 
 interface CallAnalysisData {
   category: string;
@@ -33,10 +34,9 @@ const initialData: CallAnalysisData[] = [
   { category: "Language Barrier", count: 14 },
 ];
 
-// helper to add percentage and group smaller ones
+// Helper to add percentages and group smaller categories
 const processData = (data: CallAnalysisData[]) => {
   const total = data.reduce((sum, d) => sum + d.count, 0);
-
   const enriched = data
     .map((d) => ({
       ...d,
@@ -61,18 +61,67 @@ const processData = (data: CallAnalysisData[]) => {
 };
 
 export default function CallAnalysisChart() {
-  const [data] = useState<CallAnalysisData[]>(initialData);
+  const [data, setData] = useState<CallAnalysisData[]>(initialData);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  console.log(import.meta.env.VITE_SUPABASE_URL);
+  console.log(import.meta.env.VITE_SUPABASE_ANON_KEY);
 
   const { processed, total } = useMemo(() => processData(data), [data]);
-
-  // dynamic height: 40px per bar (min 400, max 1200)
   const chartHeight = Math.min(Math.max(processed.length * 40, 400), 1200);
+
+  // --- Fetch user-specific data from Supabase ---
+  const handleLoadData = async () => {
+    const email = prompt("Enter your email to load custom data:");
+    if (!email) return;
+
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const { data: userData, error } = await supabase
+        .from("user_chart_data")
+        .select("custom_values")
+        .eq("email", email)
+        .eq("chart_type", "call_duration") // match the value you actually have
+        .single();
+
+      if (error) throw error;
+
+      console.log("Fetched data:", userData);
+
+      // ✅ Corrected: access the right field
+      if (userData?.custom_values && Array.isArray(userData.custom_values)) {
+        setData(userData.custom_values);
+        setMessage("✅ Custom data loaded successfully!");
+      } else {
+        setMessage("⚠️ No custom data found for this email.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setMessage("❌ Error fetching data from Supabase.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center gap-6 w-full">
       <h2 className="text-4xl font-semibold text-center mb-2 bg-gradient-to-r from-[#00E5FF] to-[#FF00FF] text-transparent bg-clip-text drop-shadow-[0_0_10px_rgba(255,0,255,0.3)]">
         Call Analysis Overview
       </h2>
+
+      {/* Load Data Button */}
+      <button
+        onClick={handleLoadData}
+        disabled={loading}
+        className="px-6 py-2 rounded-full bg-gradient-to-r from-[#00E5FF] to-[#FF00FF] text-white font-medium shadow-md hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50"
+      >
+        {loading ? "Loading..." : "Load My Data"}
+      </button>
+
+      {message && <p className="text-sm text-gray-400 mt-1">{message}</p>}
 
       <div className="w-full max-w-6xl bg-gradient-to-br from-[#0b0b1a] via-[#0f1020] to-[#151528] border border-white/8 rounded-3xl p-6 shadow-lg">
         <div style={{ height: chartHeight }}>
