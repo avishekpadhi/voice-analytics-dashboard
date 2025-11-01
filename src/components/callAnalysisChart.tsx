@@ -10,6 +10,7 @@ import {
   LabelList,
 } from "recharts";
 import { supabase } from "../lib/supabaseClient";
+import CustomDataModal from "./dataModal";
 
 interface CallAnalysisData {
   category: string;
@@ -64,12 +65,18 @@ export default function CallAnalysisChart() {
   const [data, setData] = useState<CallAnalysisData[]>(initialData);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
 
   console.log(import.meta.env.VITE_SUPABASE_URL);
   console.log(import.meta.env.VITE_SUPABASE_ANON_KEY);
 
   const { processed, total } = useMemo(() => processData(data), [data]);
   const chartHeight = Math.min(Math.max(processed.length * 40, 400), 1200);
+
+  const handleDataLoaded = (newData: CallAnalysisData[]) => {
+    setData(newData);
+    setMessage("✅ Custom data loaded successfully!");
+  };
 
   // --- Fetch user-specific data from Supabase ---
   const handleLoadData = async () => {
@@ -127,6 +134,13 @@ export default function CallAnalysisChart() {
       </button>
 
       {message && <p className="text-sm text-gray-400 mt-1">{message}</p>}
+
+      <button
+        onClick={() => setModalOpen(true)} // 👈 this triggers the modal
+        className="px-6 py-2 rounded-full bg-gradient-to-r from-[#FF00FF] to-[#00E5FF] text-white font-medium shadow-md hover:shadow-lg hover:scale-105 transition-all"
+      >
+        Load / Create Custom Data
+      </button>
 
       <div className="w-full max-w-6xl bg-gradient-to-br from-[#0b0b1a] via-[#0f1020] to-[#151528] border border-white/8 rounded-3xl p-6 shadow-lg">
         <div style={{ height: chartHeight }}>
@@ -208,6 +222,13 @@ export default function CallAnalysisChart() {
           </div>
         </div>
       </div>
+
+      <CustomDataModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onDataLoaded={handleDataLoaded}
+        chartType="call_analysis"
+      />
     </div>
   );
 }

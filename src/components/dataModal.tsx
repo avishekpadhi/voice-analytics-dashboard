@@ -1,3 +1,4 @@
+// src/components/dataModal.tsx
 import { useState } from "react";
 import {
   Dialog,
@@ -15,6 +16,7 @@ interface CustomDataModalProps {
   onClose: () => void;
   onDataLoaded: (data: { category: string; count: number }[]) => void;
   chartType?: string;
+  email: string; // 👈 new
 }
 
 export default function CustomDataModal({
@@ -22,15 +24,15 @@ export default function CustomDataModal({
   onClose,
   onDataLoaded,
   chartType = "call_analysis",
+  email,
 }: CustomDataModalProps) {
-  const [email, setEmail] = useState("");
   const [rawInput, setRawInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleSave = async () => {
     if (!email) {
-      setErrorMsg("Please enter an email.");
+      setErrorMsg("Missing email address. Please reload.");
       return;
     }
 
@@ -38,23 +40,6 @@ export default function CustomDataModal({
     setErrorMsg("");
 
     try {
-      // Try fetching existing data first
-      const { data: existing, error: fetchError } = await supabase
-        .from("user_chart_data")
-        .select("custom_values")
-        .eq("email", email)
-        .eq("chart_type", chartType)
-        .single();
-
-      if (fetchError && fetchError.code !== "PGRST116") throw fetchError;
-
-      if (existing?.custom_values) {
-        onDataLoaded(existing.custom_values);
-        onClose();
-        return;
-      }
-
-      // Parse new data
       const parsed = rawInput
         .split(",")
         .map((pair) => {
@@ -78,7 +63,6 @@ export default function CustomDataModal({
         return;
       }
 
-      // Save valid data
       const { error: insertError } = await supabase
         .from("user_chart_data")
         .upsert([
@@ -94,9 +78,9 @@ export default function CustomDataModal({
 
       onDataLoaded(parsed);
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setErrorMsg("❌ Error saving or fetching data.");
+      setErrorMsg("❌ Error saving data.");
     } finally {
       setLoading(false);
     }
@@ -107,20 +91,14 @@ export default function CustomDataModal({
       <DialogContent className="bg-[#0f1020] border border-white/10 text-white rounded-2xl shadow-xl">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold bg-gradient-to-r from-[#00E5FF] to-[#FF00FF] text-transparent bg-clip-text">
-            Load or Create Chart Data
+            Create / Update Chart Data
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
-          <div>
-            <label className="text-sm text-gray-400">Email</label>
-            <Input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="bg-[#151528] border border-white/10 mt-1"
-            />
-          </div>
+          <p className="text-sm text-gray-400">
+            Data for <span className="font-semibold text-white">{email}</span>
+          </p>
 
           <div>
             <label className="text-sm text-gray-400">
