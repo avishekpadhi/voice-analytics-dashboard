@@ -114,7 +114,9 @@ const CallAnalysisChart: React.FC = () => {
                   position="right"
                   fill="#fff"
                   fontSize={12}
-                  formatter={(val: number) => `${val.toFixed(1)}%`}
+                  formatter={(val) =>
+                    typeof val === "number" ? `${val.toFixed(1)}%` : val
+                  }
                 />
               </Bar>
             </BarChart>
