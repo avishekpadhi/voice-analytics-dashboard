@@ -76,6 +76,11 @@ export default function CallAnalysisChart() {
     const email = prompt("Enter your email to load custom data:");
     if (!email) return;
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert("Invalid email. Please enter a valid one.");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
 
