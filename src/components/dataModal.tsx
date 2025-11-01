@@ -32,24 +32,36 @@ export default function CustomDataModal({
   // ✅ Fetch existing data for this user
   useEffect(() => {
     const fetchExistingData = async () => {
-      if (!email) return;
+      if (!email) {
+        setRawInput("");
+        return;
+      }
+
       const { data, error } = await supabase
         .from("user_chart_data")
         .select("custom_values")
         .eq("email", email)
         .eq("chart_type", chartType)
-        .single();
+        .maybeSingle();
 
-      if (error) return;
-      if (data?.custom_values) {
+      if (error) {
+        console.warn("Supabase fetch error:", error.message);
+        setRawInput("");
+        return;
+      }
+
+      if (data?.custom_values?.length) {
         const formatted = data.custom_values
-          .map((item: any) => `${item.category}:${item.count}`)
+          .map((item: any) => `${item.category}: ${item.count}`)
           .join(", ");
         setRawInput(formatted);
+      } else {
+        setRawInput("");
       }
     };
+
     fetchExistingData();
-  }, [email, chartType]);
+  }, [email, chartType, open]);
 
   const handleSave = async () => {
     if (!email) {
@@ -61,12 +73,14 @@ export default function CustomDataModal({
     setErrorMsg("");
 
     try {
-      // ✅ Validate pattern using regex: "word:number"
+      // ✅ Validate pattern: category must contain only letters/spaces; count must be number
       const validPattern =
-        /^(\s*[A-Za-z0-9\s]+:\s*\d+\s*)(,\s*[A-Za-z0-9\s]+:\s*\d+\s*)*$/;
+        /^(\s*[A-Za-z\s]+:\s*\d+\s*)(,\s*[A-Za-z\s]+:\s*\d+\s*)*$/;
       if (!validPattern.test(rawInput.trim())) {
         setErrorMsg(
-          "❌ Invalid format. Please use `Category:count` pairs separated by commas.\nExample: Caller Identification:35, Incorrect caller identity:20"
+          "❌ Invalid format.\n\nEach item must be in `Category:Number` format.\n" +
+            "➤ Category: only letters and spaces (no numbers or special characters)\n" +
+            "➤ Use commas to separate items\n\nExample:\nCaller Identification:35, Incorrect Caller Identity:20"
         );
         return;
       }
@@ -114,25 +128,38 @@ export default function CustomDataModal({
             Data for <span className="font-semibold text-white">{email}</span>
           </p>
 
-          {/* ✅ Example section */}
-          <div className="bg-[#1a1b2e] p-3 rounded-lg border border-white/10 text-sm text-gray-400">
-            <p className="mb-1 font-semibold text-white">Example format:</p>
-            <p className="font-mono text-gray-300">
-              Caller Identification:35, Incorrect caller identity:20
+          {/* 🧩 Instruction section */}
+          <div className="bg-[#1a1b2e] p-3 rounded-lg border border-white/10 text-sm text-gray-300 leading-relaxed">
+            <p className="font-semibold text-white mb-2">
+              🧩 How to format your data
             </p>
-            <p className="mt-2 text-xs text-gray-500">
-              ➤ Use commas to separate items. ➤ Each pair must be in{" "}
-              <span className="text-white">Category:Number</span> format.
-            </p>
+            <ul className="list-disc list-inside space-y-1 text-gray-400 text-sm">
+              <li>
+                Each entry must be in{" "}
+                <span className="text-white">Category:Number</span> format.
+              </li>
+              <li>
+                Category names must contain{" "}
+                <span className="text-white">only letters and spaces</span> (no
+                numbers or symbols).
+              </li>
+              <li>Use commas to separate multiple entries.</li>
+            </ul>
+
+            <div className="mt-3 bg-[#101125] p-2 rounded-md font-mono text-gray-200 text-sm border border-white/5">
+              Example:
+              <br />
+              Caller Identification:35, Incorrect Caller Identity:20
+            </div>
           </div>
 
-          {/* ✅ Textarea for input */}
+          {/* 📝 Textarea input */}
           <div>
             <label className="text-sm text-gray-400">Your Custom Data</label>
             <textarea
               value={rawInput}
               onChange={(e) => setRawInput(e.target.value)}
-              placeholder="Caller Identification:35, Incorrect caller identity:20"
+              placeholder="Caller Identification:35, Incorrect Caller Identity:20"
               className="w-full h-24 bg-[#151528] border border-white/10 rounded-lg p-2 text-sm text-gray-300 mt-1"
             />
           </div>

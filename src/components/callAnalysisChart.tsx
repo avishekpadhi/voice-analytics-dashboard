@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -35,7 +35,7 @@ const initialData: CallAnalysisData[] = [
   { category: "Language Barrier", count: 14 },
 ];
 
-// Helper to add percentages and group smaller categories
+// Helper: add percentages + group smaller ones
 const processData = (data: CallAnalysisData[]) => {
   const total = data.reduce((sum, d) => sum + d.count, 0);
   const enriched = data
@@ -50,11 +50,10 @@ const processData = (data: CallAnalysisData[]) => {
 
   if (others.length > 0) {
     const otherSum = others.reduce((sum, d) => sum + d.count, 0);
-    const otherPercentage = (otherSum / total) * 100;
     top20.push({
       category: "Others",
       count: otherSum,
-      percentage: otherPercentage,
+      percentage: (otherSum / total) * 100,
     });
   }
 
@@ -72,14 +71,54 @@ export default function CallAnalysisChart() {
   const { processed, total } = useMemo(() => processData(data), [data]);
   const chartHeight = Math.min(Math.max(processed.length * 40, 400), 1200);
 
+  // Handle custom data submission from modal
   const handleDataLoaded = (newData: CallAnalysisData[]) => {
     setData(newData);
     setHasCustomData(true);
     setMessage("✅ Custom data loaded successfully!");
   };
 
-  // --- Fetch user-specific data from Supabase ---
-  const handleLoadData = async () => {
+  // Fetch data whenever userEmail changes
+  useEffect(() => {
+    if (!userEmail) return;
+
+    const fetchUserData = async () => {
+      setLoading(true);
+      setMessage("");
+
+      const { data: userData, error } = await supabase
+        .from("user_chart_data")
+        .select("custom_values")
+        .eq("email", userEmail)
+        .eq("chart_type", "call_analysis")
+        .maybeSingle();
+
+      if (error) {
+        console.error("Supabase fetch error:", error);
+        setData([]); // ✅ empty array for error state
+        setHasCustomData(false);
+        setMessage("⚠️ No data found");
+      } else if (
+        userData?.custom_values &&
+        Array.isArray(userData.custom_values)
+      ) {
+        setData(userData.custom_values);
+        setHasCustomData(true);
+        setMessage("✅ Custom data loaded successfully!");
+      } else {
+        setHasCustomData(false);
+        setMessage("⚠️ No data found");
+        setData([]); // ✅ empty array for no-data state
+      }
+
+      setLoading(false);
+    };
+
+    fetchUserData();
+  }, [userEmail]);
+
+  // Triggered by "Load My Data" button
+  const handleLoadData = () => {
     const email = prompt("Enter your email to load custom data:");
     if (!email) return;
 
@@ -88,38 +127,7 @@ export default function CallAnalysisChart() {
       return;
     }
 
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const { data: userData, error } = await supabase
-        .from("user_chart_data")
-        .select("custom_values")
-        .eq("email", email)
-        .eq("chart_type", "call_analysis") // match the value you actually have
-        .single();
-
-      if (error) throw error;
-
-      console.log("Fetched data:", userData);
-      setUserEmail(email);
-
-      // ✅ Corrected: access the right field
-      if (userData?.custom_values && Array.isArray(userData.custom_values)) {
-        setData(userData.custom_values);
-        setMessage("✅ Custom data loaded successfully!");
-        setHasCustomData(true);
-      } else {
-        setHasCustomData(false);
-        setMessage("⚠️ No custom data found for this email.");
-      }
-    } catch (err: any) {
-      setHasCustomData(false);
-      console.error(err);
-      setMessage("❌ Error fetching data from Supabase.");
-    } finally {
-      setLoading(false);
-    }
+    setUserEmail(email.trim());
   };
 
   return (
@@ -148,6 +156,7 @@ export default function CallAnalysisChart() {
         </button>
       )}
 
+      {/* Chart */}
       <div className="w-full max-w-6xl bg-gradient-to-br from-[#0b0b1a] via-[#0f1020] to-[#151528] border border-white/8 rounded-3xl p-6 shadow-lg">
         <div style={{ height: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
@@ -171,7 +180,6 @@ export default function CallAnalysisChart() {
                 axisLine={false}
                 tickLine={false}
               />
-
               <YAxis
                 type="category"
                 dataKey="category"
@@ -181,7 +189,6 @@ export default function CallAnalysisChart() {
                 axisLine={false}
                 tickLine={false}
               />
-
               <Tooltip
                 contentStyle={{
                   backgroundColor: "rgba(20,20,30,0.95)",
@@ -214,6 +221,7 @@ export default function CallAnalysisChart() {
           </ResponsiveContainer>
         </div>
 
+        {/* Footer summary */}
         <div className="mt-6 flex justify-between items-center">
           <div />
           <div className="flex flex-col items-end">
@@ -229,6 +237,7 @@ export default function CallAnalysisChart() {
         </div>
       </div>
 
+      {/* Modal */}
       <CustomDataModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
