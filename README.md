@@ -1,73 +1,38 @@
-# React + TypeScript + Vite
+# Voice Analytics
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A lightweight web app for visualizing and analyzing call data through beautiful, interactive charts. Built with tools I love working with — React, Supabase, and a modern UI stack that keeps everything fast and fun to build.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Tech Stack
 
-## React Compiler
+### **Frontend**
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React** — My go-to choice for any frontend project. I’ve spent a lot of time with it, and it fits perfectly for building dynamic, component-based dashboards like this.
+- **TypeScript** — I’m actively getting better at TypeScript. It helps me write cleaner, more reliable code, and I’ve been using this project to push that learning further.
+- **Vite** — My favorite build tool. It’s fast, simple, and makes local development feel instant. I honestly can’t go back to anything slower.
 
-## Expanding the ESLint configuration
+### **State Management**
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **React `useState`** — Keeping it simple. The app doesn’t need complex state management, and `useState` does the job perfectly without adding unnecessary overhead.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### **Charting**
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- **Chart.js** & **Recharts** — Both serve different needs here: Recharts for quick, clean charts, and Chart.js when I want finer control. I like having the flexibility of both. ChatGPT also recommended these. So.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### **Backend**
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- **Supabase** — Easy to set up, integrates nicely with React, and gives me a fast way to store and fetch user-specific data without dealing with backend boilerplate.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### **UI / Styling**
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **shadcn/ui** — I love this library. It gives me elegant, pre-built components that I can still customize however I like. It’s made the UI side of this project a joy to work on.
+- **Tailwind CSS** — My favorite way to style. It’s fast, consistent, and works beautifully with shadcn. I can design and tweak layouts directly in the markup without jumping between files.
+
+### **Animation**
+
+- **Framer Motion** — I added it for subtle transitions and animations that make the UI feel alive and polished. It’s simple to use but adds a lot to the overall experience.
+
+---
+
+This project is a mix of tools I’m comfortable with and a few I’m intentionally learning deeper. The stack keeps development smooth, the UI modern, and the experience genuinely enjoyable to build and use.
