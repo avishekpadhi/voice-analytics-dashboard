@@ -96,7 +96,7 @@ export default function CallAnalysisChart() {
         .from("user_chart_data")
         .select("custom_values")
         .eq("email", email)
-        .eq("chart_type", "call_duration") // match the value you actually have
+        .eq("chart_type", "call_analysis") // match the value you actually have
         .single();
 
       if (error) throw error;

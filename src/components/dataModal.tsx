@@ -1,5 +1,5 @@
 // src/components/dataModal.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -16,7 +15,7 @@ interface CustomDataModalProps {
   onClose: () => void;
   onDataLoaded: (data: { category: string; count: number }[]) => void;
   chartType?: string;
-  email: string; // 👈 new
+  email: string;
 }
 
 export default function CustomDataModal({
@@ -30,6 +29,28 @@ export default function CustomDataModal({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  // ✅ Fetch existing data for this user
+  useEffect(() => {
+    const fetchExistingData = async () => {
+      if (!email) return;
+      const { data, error } = await supabase
+        .from("user_chart_data")
+        .select("custom_values")
+        .eq("email", email)
+        .eq("chart_type", chartType)
+        .single();
+
+      if (error) return;
+      if (data?.custom_values) {
+        const formatted = data.custom_values
+          .map((item: any) => `${item.category}:${item.count}`)
+          .join(", ");
+        setRawInput(formatted);
+      }
+    };
+    fetchExistingData();
+  }, [email, chartType]);
+
   const handleSave = async () => {
     if (!email) {
       setErrorMsg("Missing email address. Please reload.");
@@ -40,28 +61,21 @@ export default function CustomDataModal({
     setErrorMsg("");
 
     try {
-      const parsed = rawInput
-        .split(",")
-        .map((pair) => {
-          const [category, countStr] = pair.split(":").map((s) => s.trim());
-          const count = Number(countStr);
-          return { category, count };
-        })
-        .filter((item) => item.category && !isNaN(item.count));
-
-      const invalidPairs = rawInput.split(",").filter((pair) => {
-        const [, countStr] = pair.split(":").map((s) => s.trim());
-        return isNaN(Number(countStr));
-      });
-
-      if (invalidPairs.length > 0) {
-        setErrorMsg(`⚠️ Ignored invalid entries: ${invalidPairs.join(", ")}`);
-      }
-
-      if (parsed.length === 0) {
-        setErrorMsg("❌ No valid entries found. Please use numeric counts.");
+      // ✅ Validate pattern using regex: "word:number"
+      const validPattern =
+        /^(\s*[A-Za-z0-9\s]+:\s*\d+\s*)(,\s*[A-Za-z0-9\s]+:\s*\d+\s*)*$/;
+      if (!validPattern.test(rawInput.trim())) {
+        setErrorMsg(
+          "❌ Invalid format. Please use `Category:count` pairs separated by commas.\nExample: Caller Identification:35, Incorrect caller identity:20"
+        );
         return;
       }
+
+      // Parse valid entries
+      const parsed = rawInput.split(",").map((pair) => {
+        const [category, countStr] = pair.split(":").map((s) => s.trim());
+        return { category, count: Number(countStr) };
+      });
 
       const { error: insertError } = await supabase
         .from("user_chart_data")
@@ -100,10 +114,21 @@ export default function CustomDataModal({
             Data for <span className="font-semibold text-white">{email}</span>
           </p>
 
+          {/* ✅ Example section */}
+          <div className="bg-[#1a1b2e] p-3 rounded-lg border border-white/10 text-sm text-gray-400">
+            <p className="mb-1 font-semibold text-white">Example format:</p>
+            <p className="font-mono text-gray-300">
+              Caller Identification:35, Incorrect caller identity:20
+            </p>
+            <p className="mt-2 text-xs text-gray-500">
+              ➤ Use commas to separate items. ➤ Each pair must be in{" "}
+              <span className="text-white">Category:Number</span> format.
+            </p>
+          </div>
+
+          {/* ✅ Textarea for input */}
           <div>
-            <label className="text-sm text-gray-400">
-              Custom Data (category:count pairs)
-            </label>
+            <label className="text-sm text-gray-400">Your Custom Data</label>
             <textarea
               value={rawInput}
               onChange={(e) => setRawInput(e.target.value)}
