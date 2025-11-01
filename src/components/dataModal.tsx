@@ -6,9 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabaseClient";
+} from "../components/ui/dialog";
+import { Button } from "../components/ui/button";
+import { supabase } from "../lib/supabaseClient";
 
 interface CustomDataModalProps {
   open: boolean;
