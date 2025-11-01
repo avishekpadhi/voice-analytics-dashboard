@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Line,
   Bar,
@@ -10,23 +9,10 @@ import {
   ResponsiveContainer,
   ComposedChart,
 } from "recharts";
-
-interface CallData {
-  date: string;
-  average_duration: number;
-  total_calls: number;
-}
-
-const initialData: CallData[] = [
-  { date: "Mon", average_duration: 3.2, total_calls: 98 },
-  { date: "Tue", average_duration: 3.8, total_calls: 120 },
-  { date: "Wed", average_duration: 4.1, total_calls: 140 },
-  { date: "Thu", average_duration: 2.9, total_calls: 105 },
-  { date: "Fri", average_duration: 3.6, total_calls: 134 },
-];
+import { CallDetails, CallDataType } from "../lib/data/callDetails";
 
 export default function CallDurationChart() {
-  const [data] = useState<CallData[]>(initialData);
+  const data: CallDataType[] = CallDetails;
 
   return (
     <div className="flex flex-col gap-4">
@@ -40,7 +26,6 @@ export default function CallDurationChart() {
             data={data}
             margin={{ top: 30, right: 40, left: 20, bottom: 10 }}
           >
-            {/* Chart Gradients */}
             <defs>
               <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#ff00ff" stopOpacity={0.7} />
@@ -48,10 +33,8 @@ export default function CallDurationChart() {
               </linearGradient>
             </defs>
 
-            {/* Grid */}
             <CartesianGrid strokeDasharray="3 3" stroke="#222" />
 
-            {/* X-Axis */}
             <XAxis
               dataKey="date"
               stroke="#aaa"
@@ -60,7 +43,6 @@ export default function CallDurationChart() {
               tick={{ fill: "#aaa", fontSize: 14 }}
             />
 
-            {/* Left Y-Axis (Average Duration) */}
             <YAxis
               yAxisId="left"
               orientation="left"
@@ -74,7 +56,6 @@ export default function CallDurationChart() {
               }}
             />
 
-            {/* Right Y-Axis (Total Calls) */}
             <YAxis
               yAxisId="right"
               orientation="right"
@@ -88,7 +69,6 @@ export default function CallDurationChart() {
               }}
             />
 
-            {/* Tooltip */}
             <Tooltip
               contentStyle={{
                 backgroundColor: "rgba(15,15,25,0.95)",
@@ -99,7 +79,6 @@ export default function CallDurationChart() {
               itemStyle={{ color: "#fff" }}
             />
 
-            {/* Legend */}
             <Legend
               verticalAlign="top"
               align="center"
@@ -107,20 +86,18 @@ export default function CallDurationChart() {
               wrapperStyle={{ paddingBottom: "10px", color: "#ccc" }}
             />
 
-            {/* Bar Chart (Total Calls) */}
             <Bar
               yAxisId="right"
-              dataKey="total_calls"
+              dataKey="totalCalls"
               fill="url(#barGradient)"
               barSize={24}
               radius={[8, 8, 0, 0]}
             />
 
-            {/* Line Chart (Average Duration) */}
             <Line
               yAxisId="left"
               type="monotone"
-              dataKey="average_duration"
+              dataKey="averageDuration"
               stroke="#00e5ff"
               strokeWidth={3}
               dot={{
