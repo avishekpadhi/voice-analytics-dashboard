@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -9,124 +9,27 @@ import {
   CartesianGrid,
   LabelList,
 } from "recharts";
-import { supabase } from "../lib/supabaseClient";
 import CustomDataModal from "./dataModal";
+import { processData } from "../lib/utils";
+import { useUserChartData } from "../lib/hooks/useUserChartData";
 
-interface CallAnalysisData {
-  category: string;
-  count: number;
-}
-
-const initialData: CallAnalysisData[] = [
-  { category: "Caller Identification", count: 35 },
-  { category: "Incorrect caller identity", count: 20 },
-  { category: "User refused to confirm identity", count: 10 },
-  { category: "Unsupported Language", count: 15 },
-  { category: "Customer Hostility", count: 10 },
-  { category: "Verbal Aggression", count: 10 },
-  { category: "Call Drop", count: 5 },
-  { category: "Technical Error", count: 7 },
-  { category: "No Response", count: 4 },
-  { category: "Accent Issue", count: 3 },
-  { category: "Late Response", count: 12 },
-  { category: "Dropped Before Greeting", count: 6 },
-  { category: "System Timeout", count: 8 },
-  { category: "Agent Not Available", count: 9 },
-  { category: "Language Barrier", count: 14 },
-];
-
-// Helper: add percentages + group smaller ones
-const processData = (data: CallAnalysisData[]) => {
-  const total = data.reduce((sum, d) => sum + d.count, 0);
-  const enriched = data
-    .map((d) => ({
-      ...d,
-      percentage: (d.count / total) * 100,
-    }))
-    .sort((a, b) => b.percentage - a.percentage);
-
-  const top20 = enriched.slice(0, 20);
-  const others = enriched.slice(20);
-
-  if (others.length > 0) {
-    const otherSum = others.reduce((sum, d) => sum + d.count, 0);
-    top20.push({
-      category: "Others",
-      count: otherSum,
-      percentage: (otherSum / total) * 100,
-    });
-  }
-
-  return { processed: top20, total };
-};
-
-export default function CallAnalysisChart() {
-  const [data, setData] = useState<CallAnalysisData[]>(initialData);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+const CallAnalysisChart: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [hasCustomData, setHasCustomData] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+
+  const { data, loading, message, hasCustomData, handleDataLoaded } =
+    useUserChartData(userEmail, "call_analysis");
 
   const { processed, total } = useMemo(() => processData(data), [data]);
   const chartHeight = Math.min(Math.max(processed.length * 40, 400), 1200);
 
-  // Handle custom data submission from modal
-  const handleDataLoaded = (newData: CallAnalysisData[]) => {
-    setData(newData);
-    setHasCustomData(true);
-    setMessage("✅ Custom data loaded successfully!");
-  };
-
-  // Fetch data whenever userEmail changes
-  useEffect(() => {
-    if (!userEmail) return;
-
-    const fetchUserData = async () => {
-      setLoading(true);
-      setMessage("");
-
-      const { data: userData, error } = await supabase
-        .from("user_chart_data")
-        .select("custom_values")
-        .eq("email", userEmail)
-        .eq("chart_type", "call_analysis")
-        .maybeSingle();
-
-      if (error) {
-        console.error("Supabase fetch error:", error);
-        setData([]); // ✅ empty array for error state
-        setHasCustomData(false);
-        setMessage("⚠️ No data found");
-      } else if (
-        userData?.custom_values &&
-        Array.isArray(userData.custom_values)
-      ) {
-        setData(userData.custom_values);
-        setHasCustomData(true);
-        setMessage("✅ Custom data loaded successfully!");
-      } else {
-        setHasCustomData(false);
-        setMessage("⚠️ No data found");
-        setData([]); // ✅ empty array for no-data state
-      }
-
-      setLoading(false);
-    };
-
-    fetchUserData();
-  }, [userEmail]);
-
-  // Triggered by "Load My Data" button
   const handleLoadData = () => {
     const email = prompt("Enter your email to load custom data:");
     if (!email) return;
-
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       alert("Invalid email. Please enter a valid one.");
       return;
     }
-
     setUserEmail(email.trim());
   };
 
@@ -171,9 +74,7 @@ export default function CallAnalysisChart() {
                   <stop offset="100%" stopColor="#FF00FF" stopOpacity={0.95} />
                 </linearGradient>
               </defs>
-
               <CartesianGrid strokeDasharray="3 3" stroke="#22202b" />
-
               <XAxis
                 type="number"
                 tick={{ fill: "#aaa", fontSize: 12 }}
@@ -202,7 +103,6 @@ export default function CallAnalysisChart() {
                   "Count",
                 ]}
               />
-
               <Bar
                 dataKey="count"
                 fill="url(#barGradient)"
@@ -221,7 +121,6 @@ export default function CallAnalysisChart() {
           </ResponsiveContainer>
         </div>
 
-        {/* Footer summary */}
         <div className="mt-6 flex justify-between items-center">
           <div />
           <div className="flex flex-col items-end">
@@ -237,7 +136,6 @@ export default function CallAnalysisChart() {
         </div>
       </div>
 
-      {/* Modal */}
       <CustomDataModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -247,4 +145,6 @@ export default function CallAnalysisChart() {
       />
     </div>
   );
-}
+};
+
+export default CallAnalysisChart;

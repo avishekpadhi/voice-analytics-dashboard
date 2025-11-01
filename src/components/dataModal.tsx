@@ -75,7 +75,8 @@ export default function CustomDataModal({
     try {
       // ✅ Validate pattern: category must contain only letters/spaces; count must be number
       const validPattern =
-        /^(\s*[A-Za-z\s]+:\s*\d+\s*)(,\s*[A-Za-z\s]+:\s*\d+\s*)*$/;
+        /^(\s*[A-Za-z][A-Za-z\s]*:\s*\d+\s*)(,\s*[A-Za-z][A-Za-z\s]*:\s*\d+\s*)*$/i;
+
       if (!validPattern.test(rawInput.trim())) {
         setErrorMsg(
           "❌ Invalid format.\n\nEach item must be in `Category:Number` format.\n" +

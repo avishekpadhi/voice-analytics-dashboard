@@ -11,3 +11,26 @@ export interface CallDataType {
   averageDuration: number;
   totalCalls: number;
 }
+
+export interface CallAnalysisType {
+  category: string;
+  count: number;
+}
+
+export const CallAnalysisData = [
+  { category: "Caller Identification", count: 35 },
+  { category: "Incorrect caller identity", count: 20 },
+  { category: "User refused to confirm identity", count: 10 },
+  { category: "Unsupported Language", count: 15 },
+  { category: "Customer Hostility", count: 10 },
+  { category: "Verbal Aggression", count: 10 },
+  { category: "Call Drop", count: 5 },
+  { category: "Technical Error", count: 7 },
+  { category: "No Response", count: 4 },
+  { category: "Accent Issue", count: 3 },
+  { category: "Late Response", count: 12 },
+  { category: "Dropped Before Greeting", count: 6 },
+  { category: "System Timeout", count: 8 },
+  { category: "Agent Not Available", count: 9 },
+  { category: "Language Barrier", count: 14 },
+];

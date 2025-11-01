@@ -9,7 +9,8 @@ import {
   ResponsiveContainer,
   ComposedChart,
 } from "recharts";
-import { CallDetails, CallDataType } from "../lib/data/callDetails";
+import { CallDetails } from "../lib/data/callDetails";
+import type { CallDataType } from "../lib/data/callDetails";
 
 export default function CallDurationChart() {
   const data: CallDataType[] = CallDetails;
