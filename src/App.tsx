@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import BackgroundCanvas from "./components/BackgroundCanvas";
-import CallDurationChart from "./components/callDurationChart";
+import CallDurationChart from "./components/CallDurationChart";
 import CallAnalysisChart from "./components/callAnalysisChart";
 
 export default function App() {
