@@ -1,6 +1,3 @@
-// import CallDurationChart from "./components/CallDurationChart";
-// import SadPathChart from "./components/SadPathChart";
-
 export default function App() {
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-8">
@@ -14,12 +11,6 @@ export default function App() {
             Analyze voice agent performance and identify improvement areas
           </p>
         </header>
-
-        {/* Charts Section */}
-        <section className="flex flex-col gap-12">
-          {/* <CallDurationChart />
-          <SadPathChart /> */}
-        </section>
 
         {/* Footer */}
         <footer className="text-center text-sm text-gray-400 mt-12">
