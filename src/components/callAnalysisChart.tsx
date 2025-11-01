@@ -66,15 +66,15 @@ export default function CallAnalysisChart() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-
-  console.log(import.meta.env.VITE_SUPABASE_URL);
-  console.log(import.meta.env.VITE_SUPABASE_ANON_KEY);
+  const [hasCustomData, setHasCustomData] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
 
   const { processed, total } = useMemo(() => processData(data), [data]);
   const chartHeight = Math.min(Math.max(processed.length * 40, 400), 1200);
 
   const handleDataLoaded = (newData: CallAnalysisData[]) => {
     setData(newData);
+    setHasCustomData(true);
     setMessage("✅ Custom data loaded successfully!");
   };
 
@@ -102,15 +102,19 @@ export default function CallAnalysisChart() {
       if (error) throw error;
 
       console.log("Fetched data:", userData);
+      setUserEmail(email);
 
       // ✅ Corrected: access the right field
       if (userData?.custom_values && Array.isArray(userData.custom_values)) {
         setData(userData.custom_values);
         setMessage("✅ Custom data loaded successfully!");
+        setHasCustomData(true);
       } else {
+        setHasCustomData(false);
         setMessage("⚠️ No custom data found for this email.");
       }
     } catch (err: any) {
+      setHasCustomData(false);
       console.error(err);
       setMessage("❌ Error fetching data from Supabase.");
     } finally {
@@ -135,12 +139,14 @@ export default function CallAnalysisChart() {
 
       {message && <p className="text-sm text-gray-400 mt-1">{message}</p>}
 
-      <button
-        onClick={() => setModalOpen(true)} // 👈 this triggers the modal
-        className="px-6 py-2 rounded-full bg-gradient-to-r from-[#FF00FF] to-[#00E5FF] text-white font-medium shadow-md hover:shadow-lg hover:scale-105 transition-all"
-      >
-        Load / Create Custom Data
-      </button>
+      {userEmail && (
+        <button
+          onClick={() => setModalOpen(true)}
+          className="px-6 py-2 rounded-full bg-gradient-to-r from-[#FF00FF] to-[#00E5FF] text-white font-medium shadow-md hover:shadow-lg hover:scale-105 transition-all"
+        >
+          {hasCustomData ? "Update Your Data" : "Add Your Data"}
+        </button>
+      )}
 
       <div className="w-full max-w-6xl bg-gradient-to-br from-[#0b0b1a] via-[#0f1020] to-[#151528] border border-white/8 rounded-3xl p-6 shadow-lg">
         <div style={{ height: chartHeight }}>
@@ -228,6 +234,7 @@ export default function CallAnalysisChart() {
         onClose={() => setModalOpen(false)}
         onDataLoaded={handleDataLoaded}
         chartType="call_analysis"
+        email={userEmail}
       />
     </div>
   );
